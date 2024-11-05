@@ -5,6 +5,9 @@ import type { Message } from 'ai';
 import { toast } from 'react-toastify';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { getMessages, getNextId, getUrlId, openDatabase, setMessages } from './db';
+import fs from 'fs';
+import path from 'path';
+import { createClient } from 'redis';
 
 export interface ChatHistoryItem {
   id: string;
@@ -20,6 +23,41 @@ export const db = persistenceEnabled ? await openDatabase() : undefined;
 
 export const chatId = atom<string | undefined>(undefined);
 export const description = atom<string | undefined>(undefined);
+
+const redisClient = createClient({
+  url: process.env.REDIS_URL,
+});
+
+redisClient.on('error', (err) => console.error('Redis Client Error', err));
+
+await redisClient.connect();
+
+const contextCache = new Map();
+
+async function getContextData(filePath) {
+  if (contextCache.has(filePath)) {
+    return contextCache.get(filePath);
+  }
+
+  const cachedContext = await redisClient.get(filePath);
+  if (cachedContext) {
+    contextCache.set(filePath, JSON.parse(cachedContext));
+    return JSON.parse(cachedContext);
+  }
+
+  const contextFilePath = path.join(process.cwd(), 'context.json');
+  const contextData = JSON.parse(fs.readFileSync(contextFilePath, 'utf8'));
+
+  const fileContext = contextData[filePath] || null;
+  if (fileContext) {
+    await redisClient.set(filePath, JSON.stringify(fileContext), {
+      EX: 3600,
+    });
+    contextCache.set(filePath, fileContext);
+  }
+
+  return fileContext;
+}
 
 export function useChatHistory() {
   const navigate = useNavigate();

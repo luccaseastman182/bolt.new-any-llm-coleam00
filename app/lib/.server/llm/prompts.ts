@@ -331,6 +331,26 @@ Here are some examples of correct usage of artifacts:
     </assistant_response>
   </example>
 </examples>
+
+<context_details>
+  <file path="app/lib/.server/llm/prompts.ts" purpose="Contains system prompts and instructions for the AI assistant">
+    <important_variables>
+      <variable name="MODIFICATIONS_TAG_NAME" description="Tag name for modifications in user messages" />
+      <variable name="WORK_DIR" description="Working directory for the AI assistant" />
+      <variable name="allowedHTMLElements" description="List of allowed HTML elements for message formatting" />
+      <variable name="stripIndents" description="Utility function for stripping indents from strings" />
+    </important_variables>
+    <functions>
+      <function name="getSystemPrompt" description="Generates the system prompt for the AI assistant" />
+    </functions>
+    <recent_changes>
+      <change date="2023-09-15" description="Added context details for each file in the system prompt" />
+    </recent_changes>
+    <notes>
+      <note>Ensure that the context data is structured with file path, purpose, important variables, functions, components, recent changes, and notes on expected content</note>
+    </notes>
+  </file>
+</context_details>
 `;
 
 export const CONTINUE_PROMPT = stripIndents`
